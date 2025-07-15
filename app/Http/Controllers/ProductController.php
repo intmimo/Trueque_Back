@@ -10,7 +10,10 @@ class ProductController extends Controller
     public function index()
     {
         $products = Product::all();
-        return view('products.index', compact('products'));
+        return response()->json([
+            'message' => 'Lista de productos',
+            'data' => $products,
+        ]);
     }
 
     public function create()

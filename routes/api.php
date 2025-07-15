@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ProductController;
 
 
 // Rutas públicas (no requieren autenticación)
@@ -25,3 +26,8 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
 });
+
+// Ruta para crear un producto (POST)
+Route::post('/products', [ProductController::class, 'store']);
+// Ruta para listar productos (GET)
+Route::get('/products', [ProductController::class, 'index']);

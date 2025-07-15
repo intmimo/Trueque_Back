@@ -3,13 +3,13 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Api\ChatController; // 👈 Importación necesaria
 
-
-// Rutas públicas (no requieren autenticación)
+// Rutas públicas
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
-// Rutas protegidas (requieren autenticación)
+// Rutas protegidas
 Route::middleware('auth:sanctum')->group(function () {
 
     // Perfil de usuario
@@ -19,9 +19,14 @@ Route::middleware('auth:sanctum')->group(function () {
     // Logout
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    // Ruta de ejemplo para obtener usuario autenticado
+    // Usuario autenticado (test)
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
 
+    // 🔥 Sistema de chat
+    Route::post('/chats/start', [ChatController::class, 'startChat']);
+    Route::post('/chats/{id}/send', [ChatController::class, 'sendMessage']);
+    Route::get('/chats', [ChatController::class, 'listChats']);
+    Route::get('/chats/{id}/messages', [ChatController::class, 'getMessages']);
 });

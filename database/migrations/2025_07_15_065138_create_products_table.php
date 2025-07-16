@@ -16,9 +16,9 @@ return new class extends Migration
             $table->string('name');
             $table->text('description');
             $table->string('location');
-            $table->date('publication_date');
             $table->enum('status', ['disponible', 'intercambiado'])->default('disponible');
             $table->string('wanted_item');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }

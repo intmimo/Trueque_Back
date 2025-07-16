@@ -25,9 +25,11 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
 
+    // PRODUCTS
+    // Ruta para crear un producto 
+    Route::post('/products', [ProductController::class, 'store']);
+    // Ruta para listar productos 
+    Route::get('/products', [ProductController::class, 'index']);
 });
 
-// Ruta para crear un producto (POST)
-Route::post('/products', [ProductController::class, 'store']);
-// Ruta para listar productos (GET)
-Route::get('/products', [ProductController::class, 'index']);
+

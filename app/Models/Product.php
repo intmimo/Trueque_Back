@@ -13,12 +13,18 @@ class Product extends Model
         'name',
         'description',
         'location',
-        'publication_date',
         'status',
         'wanted_item',
+        'user_id'
     ];
 
     protected $casts = [
         'publication_date' => 'date',
     ];
+
+    // Relación: Un producto pertenece a un usuario
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

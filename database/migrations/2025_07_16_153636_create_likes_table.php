@@ -14,8 +14,8 @@ return new class extends Migration
     {
         Schema::create('likes', function (Blueprint $table) {
             $table->id();
-            $table->foreingId('user_id')->constraiend ('users') ->onDelete('cascada');
-            $table->foreingId('product_id')->constraiend ('products') ->onDelete('cascada');
+            $table->foreignId('user_id')->constrained ('users') ->onDelete('cascade');
+            $table->foreignId('product_id')->constrained ('products') ->onDelete('cascade');
             $table->timestamps();
 
                     //Evitar que el ususario pueda dar mas de un like

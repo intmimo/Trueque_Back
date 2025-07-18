@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-
 class Like extends Model
 {
     use HasFactory;
@@ -15,25 +14,25 @@ class Like extends Model
         'product_id',
     ];
 
-
     protected $casts = [
-        'created_at' => 'datetime',
         'created_at' => 'datetime',
     ];
 
-    //Relaciones
+    // Relaciones
 
-    //Un like pertenece a un ususario
-    public function user(){
+    // Un like pertenece a un usuario
+    public function user()
+    {
         return $this->belongsTo(User::class);
     }
 
-    //un like pertenece a un producto
-    public function product(){
+    // Un like pertenece a un producto
+    public function product()
+    {
         return $this->belongsTo(Product::class);
     }
 
-        // Scopes útiles
+    // Scopes útiles
 
     /**
      * Scope para obtener likes de un usuario específico

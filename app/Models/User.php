@@ -58,6 +58,22 @@ class User extends Authenticatable
         return $this->hasMany(Like::class);
     }
 
+    /**
+     * Productos que el usuario ha likeado (relación many-to-many)
+     */
+    public function likedProducts()
+    {
+        return $this->belongsToMany(Product::class, 'likes')->withTimestamps();
+    }
+
+    /**
+     * Verificar si el usuario ha dado like a un producto
+     */
+    public function hasLiked($productId)
+    {
+        return $this->likes()->where('product_id', $productId)->exists();
+    }
+
     // Métodos adicionales
 
     /**

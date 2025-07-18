@@ -29,6 +29,30 @@ class Product extends Model
     }
 
     /**
+     * Un producto puede tener muchas imágenes
+     */
+    public function images()
+    {
+        return $this->hasMany(ProductImage::class)->orderBy('sort_order');
+    }
+
+    /**
+     * Obtener solo la imagen principal
+     */
+    public function primaryImage()
+    {
+        return $this->hasOne(ProductImage::class)->where('is_primary', true);
+    }
+
+    /**
+     * Obtener todas las imágenes excepto la principal
+     */
+    public function secondaryImages()
+    {
+        return $this->hasMany(ProductImage::class)->where('is_primary', false)->orderBy('sort_order');
+    }
+
+    /**
      * Un producto puede tener muchos likes
      */
     public function likes()
@@ -58,5 +82,24 @@ class Product extends Model
     public function isLikedBy($userId)
     {
         return $this->likes()->where('user_id', $userId)->exists();
+    }
+
+    /**
+     * Obtener URL de la imagen principal
+     */
+    public function getPrimaryImageUrlAttribute()
+    {
+        $primaryImage = $this->primaryImage;
+        return $primaryImage ? $primaryImage->image_url : null;
+    }
+
+    /**
+     * Obtener todas las URLs de las imágenes
+     */
+    public function getImageUrlsAttribute()
+    {
+        return $this->images->map(function ($image) {
+            return $image->image_url;
+        });
     }
 }

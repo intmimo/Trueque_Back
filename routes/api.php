@@ -37,6 +37,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/products', [ProductController::class, 'store']);
     // Ruta para listar productos
     Route::get('/products', [ProductController::class, 'index']);
+    
     // 🔥 Sistema de chat
     Route::post('/chats/start', [ChatController::class, 'startChat']);
     Route::post('/chats/{id}/send', [ChatController::class, 'sendMessage']);

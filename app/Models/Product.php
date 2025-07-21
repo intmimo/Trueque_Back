@@ -18,9 +18,6 @@ class Product extends Model
         'user_id'
     ];
 
-    protected $casts = [
-        'publication_date' => 'date',
-    ];
 
     // Relación: Un producto pertenece a un usuario
     public function user()

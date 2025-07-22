@@ -18,6 +18,9 @@ class Product extends Model
         'user_id'
     ];
 
+    protected $casts = [
+        'publication_date' => 'date',
+    ];
 
     // Relación: Un producto pertenece a un usuario
     public function user()
@@ -31,6 +34,14 @@ class Product extends Model
     public function likes()
     {
         return $this->hasMany(Like::class);
+    }
+
+    /**
+     * Un producto puede tener muchas imágenes
+     */
+    public function images()
+    {
+        return $this->hasMany(ProductImage::class)->orderBy('order');
     }
 
     /**
@@ -55,5 +66,14 @@ class Product extends Model
     public function isLikedBy($userId)
     {
         return $this->likes()->where('user_id', $userId)->exists();
+    }
+
+    /**
+     * Obtener la primera imagen como imagen principal
+     */
+    public function getMainImageAttribute()
+    {
+        $firstImage = $this->images()->first();
+        return $firstImage ? $firstImage->image_url : null;
     }
 }

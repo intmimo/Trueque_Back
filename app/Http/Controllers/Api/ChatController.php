@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Chat;
 use App\Models\Message;
+use App\Events\MessageSent; // Importamos el evento para emitir notificaciones
 
 class ChatController extends Controller
 {
@@ -20,12 +21,12 @@ class ChatController extends Controller
         $authUserId = auth()->id();
         $targetUserId = $request->user_id;
 
-        // Busco si ya existe un chat entre ambos
+        // Busco si ya existe un chat entre ambos usuarios
         $chat = Chat::whereHas('users', fn($q) => $q->where('user_id', $authUserId))
             ->whereHas('users', fn($q) => $q->where('user_id', $targetUserId))
             ->first();
 
-        // Si no existe, lo creo y los uno al chat
+        // Si no existe, creo un nuevo chat y los vinculo
         if (!$chat) {
             $chat = Chat::create();
             $chat->users()->attach([$authUserId, $targetUserId]);
@@ -35,7 +36,7 @@ class ChatController extends Controller
     }
 
     // POST /api/chats/{id}/send
-    // Enviar un mensaje en un chat si el usuario está autorizado
+    // Envía un mensaje en un chat si el usuario pertenece al chat
     public function sendMessage(Request $request, $id)
     {
         $request->validate([
@@ -44,14 +45,19 @@ class ChatController extends Controller
 
         $chat = Chat::findOrFail($id);
 
+        // Verificamos que el usuario autenticado esté en el chat
         if (!$chat->users->contains(auth()->id())) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
 
+        // Guardamos el mensaje en la base de datos
         $message = $chat->messages()->create([
             'user_id' => auth()->id(),
             'content' => $request->content,
         ]);
+
+        // Disparamos el evento para notificación en tiempo real
+        event(new MessageSent($message));
 
         return response()->json($message);
     }

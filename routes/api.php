@@ -13,8 +13,9 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/users/{id}/likes', [LikeController::class, 'getUserLikes']);
 Route::get('/users/{id}/liked-by-others', [LikeController::class, 'getUserLikedByOthers']);
 
-// Ruta pública para ver productos (sin autenticación)
+// Ruta pública para ver productos
 Route::get('/products', [ProductController::class, 'index']);
+// Ruta pública para ver un producto específico
 Route::get('/products/{id}', [ProductController::class, 'show']);
 
 // Rutas protegidas
@@ -40,7 +41,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Ruta para crear un producto
     Route::post('/products', [ProductController::class, 'store']);
     // Ruta para eliminar un producto
-    Route::delete('/products/{id}', [ProductController::class, 'destroy']); // El
+    Route::delete('/products/{id}', [ProductController::class, 'destroy']);
 
     // 🔥 Sistema de chat
     Route::post('/chats/start', [ChatController::class, 'startChat']);

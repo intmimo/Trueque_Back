@@ -206,4 +206,26 @@ class ProductController extends Controller
             'data' => $products,
         ]);
     }
+
+    /**
+     * Obtener todos los productos del usuario autenticado
+     * GET /api/my-products
+     */
+    public function getMyProducts(Request $request)
+    {
+        $products = Product::with([
+            'user:id,name,email,rating,colonia,municipio',
+            'images' => function($query) {
+                $query->orderBy('order');
+            }
+        ])
+        ->where('user_id', $request->user()->id)
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+        return response()->json([
+            'message' => 'Mis productos',
+            'data' => $products,
+        ]);
+    }
 }

@@ -17,6 +17,8 @@ Route::get('/users/{id}/liked-by-others', [LikeController::class, 'getUserLikedB
 Route::get('/products', [ProductController::class, 'index']);
 // Ruta pública para ver un producto específico
 Route::get('/products/{id}', [ProductController::class, 'show']);
+// Ruta para obtener productos de un usuario específico
+Route::get('/users/{userId}/products', [ProductController::class, 'getUserProducts']);
 
 // Rutas protegidas
 Route::middleware('auth:sanctum')->group(function () {

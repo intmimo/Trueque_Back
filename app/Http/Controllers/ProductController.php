@@ -184,4 +184,48 @@ class ProductController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Obtener todos los productos de un usuario específico
+     * GET /api/users/{userId}/products
+     */
+    public function getUserProducts($userId)
+    {
+        $products = Product::with([
+            'user:id,name,email,rating,colonia,municipio',
+            'images' => function($query) {
+                $query->orderBy('order');
+            }
+        ])
+        ->where('user_id', $userId)
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+        return response()->json([
+            'message' => 'Productos del usuario',
+            'data' => $products,
+        ]);
+    }
+
+    /**
+     * Obtener todos los productos del usuario autenticado
+     * GET /api/my-products
+     */
+    public function getMyProducts(Request $request)
+    {
+        $products = Product::with([
+            'user:id,name,email,rating,colonia,municipio',
+            'images' => function($query) {
+                $query->orderBy('order');
+            }
+        ])
+        ->where('user_id', $request->user()->id)
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+        return response()->json([
+            'message' => 'Mis productos',
+            'data' => $products,
+        ]);
+    }
 }

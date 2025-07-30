@@ -17,6 +17,8 @@ Route::get('/users/{id}/liked-by-others', [LikeController::class, 'getUserLikedB
 Route::get('/products', [ProductController::class, 'index']);
 // Ruta pública para ver un producto específico
 Route::get('/products/{id}', [ProductController::class, 'show']);
+// Ruta para obtener productos de un usuario específico
+Route::get('/users/{userId}/products', [ProductController::class, 'getUserProducts']);
 
 // Rutas protegidas
 Route::middleware('auth:sanctum')->group(function () {
@@ -42,6 +44,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/products', [ProductController::class, 'store']);
     // Ruta para eliminar un producto
     Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+    //Obtener todos los productos del usuario autenticado
+    Route::get('/my-products', [ProductController::class, 'getMyProducts']);
 
     // 🔥 Sistema de chat
     Route::post('/chats/start', [ChatController::class, 'startChat']);

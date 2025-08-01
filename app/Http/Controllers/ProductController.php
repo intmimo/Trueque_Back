@@ -11,20 +11,21 @@ use Illuminate\Support\Facades\DB;
 class ProductController extends Controller
 {
     /**
-     * Obtener todos los productos
+     * Obtener todos los productos disponibles
      * GET /api/products
      */
     public function index()
     {
-        $products = Product::with([
-            'user:id,name,email,rating,colonia,municipio',
-            'images' => function($query) {
-                $query->orderBy('order');
-            }
-        ])->get();
+        $products = Product::where('status', 'disponible')
+            ->with([
+                'user:id,name,email,rating,colonia,municipio',
+                'images' => function($query) {
+                    $query->orderBy('order');
+                }
+            ])->get();
         
         return response()->json([
-            'message' => 'Lista de productos',
+            'message' => 'Lista de productos disponibles',
             'data' => $products,
         ]);
     }

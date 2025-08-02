@@ -42,6 +42,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/products', [ProductController::class, 'store']);
     // Ruta para eliminar un producto
     Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+    // Actualizar un producto
+    Route::put('/products/{id}', [ProductController::class, 'update']);
+    Route::patch('/products/{id}', [ProductController::class, 'update']);
 
     // 🔥 Sistema de chat
     Route::post('/chats/start', [ChatController::class, 'startChat']);

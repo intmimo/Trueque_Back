@@ -185,4 +185,98 @@ class ProductController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Actualizar un producto existente
+     * PUT/PATCH /api/products/{id}
+     */
+    public function update(Request $request, $id)
+    {
+        $product = Product::find($id);
+
+        if (!$product) {
+            return response()->json([
+                'message' => 'Producto no encontrado',
+            ], 404);
+        }
+
+        // Verificar que el usuario autenticado sea el dueño del producto
+        if ($product->user_id !== auth()->id()) {
+            return response()->json([
+                'message' => 'No tienes permisos para editar este producto',
+            ], 403);
+        }
+
+        // Validación
+        $request->validate([
+            'name' => 'sometimes|required|string|min:3|max:50',
+            'description' => 'sometimes|required|string|min:10|max:255',
+            'location' => 'sometimes|required|string|max:100',
+            'status' => 'sometimes|required|in:disponible,intercambiado',
+            'wanted_item' => 'sometimes|required|string|max:255',
+            'images' => 'nullable|array|max:10', // Máximo 10 imágenes
+            'images.*' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120', // Máximo 5MB por imagen
+            'remove_images' => 'nullable|array', // IDs de imágenes a eliminar
+            'remove_images.*' => 'integer|exists:product_images,id',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Actualizar solo los campos que se enviaron
+            $updateData = $request->only(['name', 'description', 'location', 'status', 'wanted_item']);
+            $product->update($updateData);
+
+            // Eliminar imágenes específicas si se solicita
+            if ($request->has('remove_images')) {
+                $imagesToRemove = $product->images()->whereIn('id', $request->remove_images)->get();
+                
+                foreach ($imagesToRemove as $image) {
+                    Storage::disk('public')->delete($image->image_path);
+                    $image->delete();
+                }
+            }
+
+            // Agregar nuevas imágenes si existen
+            if ($request->hasFile('images')) {
+                // Obtener el orden más alto actual para continuar la secuencia
+                $maxOrder = $product->images()->max('order') ?? -1;
+                
+                foreach ($request->file('images') as $index => $image) {
+                    $fileName = time() . '_' . ($maxOrder + $index + 1) . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+                    $path = $image->storeAs('products', $fileName, 'public');
+                    
+                    ProductImage::create([
+                        'product_id' => $product->id,
+                        'image_path' => $path,
+                        'original_name' => $image->getClientOriginalName(),
+                        'order' => $maxOrder + $index + 1,
+                    ]);
+                }
+            }
+
+            // Cargar las relaciones actualizadas
+            $product->load([
+                'user:id,name,email,rating,colonia,municipio',
+                'images' => function($query) {
+                    $query->orderBy('order');
+                }
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Producto actualizado correctamente',
+                'data' => $product,
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            
+            return response()->json([
+                'message' => 'Error al actualizar el producto',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }

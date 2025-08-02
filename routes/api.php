@@ -46,6 +46,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/products/{id}', [ProductController::class, 'destroy']);
     //Obtener todos los productos del usuario autenticado
     Route::get('/my-products', [ProductController::class, 'getMyProducts']);
+    // Actualizar un producto
+    Route::put('/products/{id}', [ProductController::class, 'update']);
+    Route::patch('/products/{id}', [ProductController::class, 'update']);
 
     // 🔥 Sistema de chat
     Route::post('/chats/start', [ChatController::class, 'startChat']);

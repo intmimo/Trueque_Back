@@ -10,7 +10,7 @@ class Message extends Model
     use HasFactory;
 
     // Estos campos se pueden llenar desde un controlador
-    protected $fillable = ['chat_id', 'user_id', 'content', 'read_at'];
+    protected $fillable = ['chat_id', 'user_id', 'content', 'read_at', 'image_path'];
 
     // Cada mensaje pertenece a un chat
     public function chat()

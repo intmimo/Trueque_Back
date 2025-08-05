@@ -6,12 +6,10 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Chat;
 use App\Models\Message;
-use App\Events\MessageSent; // Importamos el evento para emitir notificaciones
+use App\Events\MessageSent;
 
 class ChatController extends Controller
 {
-    // POST /api/chats/start
-    // Inicia un chat entre dos usuarios (o devuelve el que ya existe)
     public function startChat(Request $request)
     {
         $request->validate([
@@ -21,49 +19,89 @@ class ChatController extends Controller
         $authUserId = auth()->id();
         $targetUserId = $request->user_id;
 
-        // Busco si ya existe un chat entre ambos usuarios
         $chat = Chat::whereHas('users', fn($q) => $q->where('user_id', $authUserId))
             ->whereHas('users', fn($q) => $q->where('user_id', $targetUserId))
             ->first();
 
-        // Si no existe, creo un nuevo chat y los vinculo
         if (!$chat) {
             $chat = Chat::create();
             $chat->users()->attach([$authUserId, $targetUserId]);
         }
 
-        return response()->json($chat->load('users'));
+        return response()->json([
+            'chat_id' => $chat->id,
+            'users' => $chat->users->map(fn($u) => [
+                'id' => $u->id,
+                'name' => $u->name,
+            ])
+        ]);
     }
 
-    // POST /api/chats/{id}/send
-    // Envía un mensaje en un chat si el usuario pertenece al chat
+    public function getChatWith($userId)
+    {
+        $authUserId = auth()->id();
+
+        $chat = Chat::whereHas('users', fn($q) => $q->where('user_id', $authUserId))
+            ->whereHas('users', fn($q) => $q->where('user_id', $userId))
+            ->with('users')
+            ->first();
+
+        if (!$chat) {
+            $chat = Chat::create();
+            $chat->users()->attach([$authUserId, $userId]);
+        }
+
+        return response()->json([
+            'chat_id' => $chat->id,
+            'users' => $chat->users->map(fn($u) => [
+                'id' => $u->id,
+                'name' => $u->name,
+            ])
+        ]);
+    }
+
     public function sendMessage(Request $request, $id)
     {
         $request->validate([
-            'content' => 'required|string'
+            'content' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048'
         ]);
 
         $chat = Chat::findOrFail($id);
 
-        // Verificamos que el usuario autenticado esté en el chat
         if (!$chat->users->contains(auth()->id())) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
 
-        // Guardamos el mensaje en la base de datos
+        $imagePath = null;
+
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('chat_images', 'public');
+        }
+
         $message = $chat->messages()->create([
             'user_id' => auth()->id(),
             'content' => $request->content,
+            'image_path' => $imagePath
         ]);
 
-        // Disparamos el evento para notificación en tiempo real
+        $message->load('user');
+
         event(new MessageSent($message));
 
-        return response()->json($message);
+        return response()->json([
+            'id' => $message->id,
+            'chat_id' => $message->chat_id,
+            'user_id' => $message->user_id,
+            'content' => $message->content,
+            'image_path' => $imagePath ? asset('storage/' . $imagePath) : null,
+            'user' => [
+                'id' => $message->user->id,
+                'name' => $message->user->name,
+            ]
+        ]);
     }
 
-    // GET /api/chats
-    // Lista los chats del usuario con su último mensaje y el otro participante
     public function listChats()
     {
         $chats = Chat::whereHas('users', fn($q) => $q->where('user_id', auth()->id()))
@@ -76,8 +114,6 @@ class ChatController extends Controller
         return response()->json($chats);
     }
 
-    // GET /api/chats/{id}/messages
-    // Retorna todos los mensajes del chat, paginados
     public function getMessages($id)
     {
         $chat = Chat::findOrFail($id);
@@ -86,8 +122,22 @@ class ChatController extends Controller
             return response()->json(['error' => 'No autorizado'], 403);
         }
 
-        $messages = $chat->messages()->with('user')->latest()->paginate(20);
+        $messages = $chat->messages()->with('user')->latest()->get();
 
-        return response()->json($messages);
+        $filtered = $messages->map(function ($message) {
+            return [
+                'id' => $message->id,
+                'chat_id' => $message->chat_id,
+                'user_id' => $message->user_id,
+                'content' => $message->content,
+                'image_path' => $message->image_path ? asset('storage/' . $message->image_path) : null,
+                'user' => [
+                    'id' => $message->user->id,
+                    'name' => $message->user->name,
+                ]
+            ];
+        });
+
+        return response()->json(['data' => $filtered]);
     }
 }

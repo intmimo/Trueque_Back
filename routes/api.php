@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Http\Request;
+use App\Http\Controllers\RatingController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\LikeController;
@@ -29,6 +30,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Logout
     Route::post('/logout', [AuthController::class, 'logout']);
+
+    // Rating
+    Route::post('/rate/{userId}', [RatingController::class, 'rateUser']);
+    Route::get('/rating/{userId}', [RatingController::class, 'getAverageRating']);
 
      // Sistema de likes
     Route::post('/products/{id}/like', [LikeController::class, 'likeProduct']);

@@ -37,6 +37,14 @@ class Product extends Model
     }
 
     /**
+     * Un producto puede tener muchas imágenes
+     */
+    public function images()
+    {
+        return $this->hasMany(ProductImage::class)->orderBy('order');
+    }
+
+    /**
      * Usuarios que han dado like al producto (relación many-to-many)
      */
     public function likedBy()
@@ -58,5 +66,14 @@ class Product extends Model
     public function isLikedBy($userId)
     {
         return $this->likes()->where('user_id', $userId)->exists();
+    }
+
+    /**
+     * Obtener la primera imagen como imagen principal
+     */
+    public function getMainImageAttribute()
+    {
+        $firstImage = $this->images()->first();
+        return $firstImage ? $firstImage->image_url : null;
     }
 }

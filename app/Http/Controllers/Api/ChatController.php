@@ -10,6 +10,7 @@ use App\Events\MessageSent;
 
 class ChatController extends Controller
 {
+    // Inicia un chat entre dos usuarios
     public function startChat(Request $request)
     {
         $request->validate([
@@ -19,10 +20,12 @@ class ChatController extends Controller
         $authUserId = auth()->id();
         $targetUserId = $request->user_id;
 
+        // Buscar si ya existe un chat entre ambos
         $chat = Chat::whereHas('users', fn($q) => $q->where('user_id', $authUserId))
             ->whereHas('users', fn($q) => $q->where('user_id', $targetUserId))
             ->first();
 
+        // Si no existe, crearlo y asociar usuarios
         if (!$chat) {
             $chat = Chat::create();
             $chat->users()->attach([$authUserId, $targetUserId]);
@@ -37,6 +40,7 @@ class ChatController extends Controller
         ]);
     }
 
+    // Obtiene o crea un chat con un usuario específico
     public function getChatWith($userId)
     {
         $authUserId = auth()->id();
@@ -60,6 +64,7 @@ class ChatController extends Controller
         ]);
     }
 
+    // Envía un mensaje en un chat existente
     public function sendMessage(Request $request, $id)
     {
         $request->validate([
@@ -69,25 +74,30 @@ class ChatController extends Controller
 
         $chat = Chat::findOrFail($id);
 
+        // Validar que el usuario pertenece al chat
         if (!$chat->users->contains(auth()->id())) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
 
         $imagePath = null;
 
+        // Subir imagen si viene en la petición
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('chat_images', 'public');
         }
 
+        // Crear mensaje
         $message = $chat->messages()->create([
             'user_id' => auth()->id(),
             'content' => $request->content,
             'image_path' => $imagePath
         ]);
 
+        // Cargar relación de usuario para el broadcast
         $message->load('user');
 
-        event(new MessageSent($message));
+        // 📢 Broadcasting en tiempo real a canal privado
+        broadcast(new MessageSent($message))->toOthers();
 
         return response()->json([
             'id' => $message->id,
@@ -102,6 +112,7 @@ class ChatController extends Controller
         ]);
     }
 
+    // Lista los chats del usuario autenticado
     public function listChats()
     {
         $chats = Chat::whereHas('users', fn($q) => $q->where('user_id', auth()->id()))
@@ -114,15 +125,17 @@ class ChatController extends Controller
         return response()->json($chats);
     }
 
+    // Obtiene todos los mensajes de un chat
     public function getMessages($id)
     {
         $chat = Chat::findOrFail($id);
 
+        // Validar que el usuario pertenece al chat
         if (!$chat->users->contains(auth()->id())) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
 
-        $messages = $chat->messages()->with('user')->latest()->get();
+        $messages = $chat->messages()->with('user')->orderBy('created_at', 'asc')->get();
 
         $filtered = $messages->map(function ($message) {
             return [
@@ -130,6 +143,7 @@ class ChatController extends Controller
                 'chat_id' => $message->chat_id,
                 'user_id' => $message->user_id,
                 'content' => $message->content,
+                'created_at' => $message->created_at,
                 'image_path' => $message->image_path ? asset('storage/' . $message->image_path) : null,
                 'user' => [
                     'id' => $message->user->id,

@@ -3,10 +3,14 @@
 use Illuminate\Http\Request;
 use App\Http\Controllers\RatingController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Broadcast;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\LikeController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\Api\ChatController; // 👈 Importación necesaria
+
+// Rutas de Broadcast para canales privados
+Broadcast::routes(['middleware' => ['auth:sanctum']]);
 
 // Rutas públicas
 Route::post('/register', [AuthController::class, 'register']);
@@ -14,11 +18,9 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/users/{id}/likes', [LikeController::class, 'getUserLikes']);
 Route::get('/users/{id}/liked-by-others', [LikeController::class, 'getUserLikedByOthers']);
 
-// Ruta pública para ver productos
+// Productos (público)
 Route::get('/products', [ProductController::class, 'index']);
-// Ruta pública para ver un producto específico
 Route::get('/products/{id}', [ProductController::class, 'show']);
-// Ruta para obtener productos de un usuario específico
 Route::get('/users/{userId}/products', [ProductController::class, 'getUserProducts']);
 
 // Rutas protegidas
@@ -35,7 +37,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/rate/{userId}', [RatingController::class, 'rateUser']);
     Route::get('/rating/{userId}', [RatingController::class, 'getAverageRating']);
 
-     // Sistema de likes
+    // Likes
     Route::post('/products/{id}/like', [LikeController::class, 'likeProduct']);
     Route::delete('/products/{id}/unlike', [LikeController::class, 'unlikeProduct']);
 
@@ -44,18 +46,14 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
 
-    // PRODUCTS
-    // Ruta para crear un producto
-    Route::post('/products', [ProductController::class, 'store']);
-    // Ruta para eliminar un producto
-    Route::delete('/products/{id}', [ProductController::class, 'destroy']);
-    //Obtener todos los productos del usuario autenticado
-    Route::get('/my-products', [ProductController::class, 'getMyProducts']);
-    // Actualizar un producto
-    Route::put('/products/{id}', [ProductController::class, 'update']);
-    Route::patch('/products/{id}', [ProductController::class, 'update']);
+    // Productos (protegido)
+    Route::post('/products', [ProductController::class, 'store']);     // Crear producto
+    Route::delete('/products/{id}', [ProductController::class, 'destroy']); // Eliminar producto
+    Route::get('/my-products', [ProductController::class, 'getMyProducts']); // Mis productos
+    Route::put('/products/{id}', [ProductController::class, 'update']);  // Actualizar producto
+    Route::patch('/products/{id}', [ProductController::class, 'update']); // Actualizar producto
 
-    // 🔥 Sistema de chat
+    // 🔥 Chat
     Route::post('/chats/start', [ChatController::class, 'startChat']);
     Route::post('/chats/{id}/send', [ChatController::class, 'sendMessage']);
     Route::get('/chats', [ChatController::class, 'listChats']);

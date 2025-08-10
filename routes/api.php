@@ -32,6 +32,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Perfil de usuario
     Route::get('/profile', [AuthController::class, 'profile']);
     Route::put('/profile/update', [AuthController::class, 'updateProfile']);
+    Route::post('/profile/photo', [AuthController::class, 'updateProfilePhoto']);
+    Route::delete('/profile/photo', [AuthController::class, 'deleteProfilePhoto']);
 
 
     // Logout

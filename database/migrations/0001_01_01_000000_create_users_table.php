@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('colonia')->nullable();
             $table->string('municipio')->nullable();
             $table->float('rating', 2, 1)->default(0.0); // rating con 2 decimales, máximo 1 dígito antes del punto
+            $table->string('profile_photo')->nullable();
             $table->rememberToken();
             $table->timestamps(); // created_at y updated_at
         });

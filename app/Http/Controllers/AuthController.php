@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -24,17 +25,27 @@ class AuthController extends Controller
                 'password' => 'required|string|min:8|confirmed', // confirmed busca password_confirmation
                 'colonia' => 'nullable|string|max:255',
                 'municipio' => 'nullable|string|max:255',
+                'profile_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Max 2MB
             ]);
 
-            // Crear el usuario
-            $user = User::create([
+            // Crear datos del usuario
+            $userData = [
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
                 'colonia' => $request->colonia,
                 'municipio' => $request->municipio,
                 'rating' => 0.0, // Rating inicial
-            ]);
+            ];
+
+            // Manejar foto de perfil si se proporciona
+            if ($request->hasFile('profile_photo')) {
+                $path = $request->file('profile_photo')->store('profile_photos', 'public');
+                $userData['profile_photo'] = $path;
+            }
+
+            // Crear el usuario
+            $user = User::create($userData);
 
             // Crear token de autenticación
             $token = $user->createToken('auth_token')->plainTextToken;
@@ -125,6 +136,7 @@ class AuthController extends Controller
                     'colonia' => $user->colonia,
                     'municipio' => $user->municipio,
                     'rating' => $user->rating,
+                    'profile_photo_url' => $user->profile_photo_url,
                     'full_location' => $user->full_location,
                     'days_in_app' => $user->days_in_app,
                     'created_at' => $user->created_at,
@@ -156,6 +168,7 @@ class AuthController extends Controller
                 'password' => 'sometimes|required|string|min:8|confirmed',
                 'colonia' => 'sometimes|nullable|string|max:255',
                 'municipio' => 'sometimes|nullable|string|max:255',
+                'profile_photo' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             ]);
 
             // Actualizar solo los campos enviados
@@ -181,6 +194,16 @@ class AuthController extends Controller
                 $updateData['municipio'] = $request->municipio;
             }
 
+            // Manejar foto de perfil
+            if ($request->hasFile('profile_photo')) {
+                // Eliminar foto anterior si existe
+                $user->deleteOldProfilePhoto();
+                
+                // Subir nueva foto
+                $path = $request->file('profile_photo')->store('profile_photos', 'public');
+                $updateData['profile_photo'] = $path;
+            }
+
             // Actualizar el usuario
             $user->update($updateData);
 
@@ -194,6 +217,70 @@ class AuthController extends Controller
                 'message' => 'Error de validación',
                 'errors' => $e->errors()
             ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error interno del servidor',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Subir/actualizar solo la foto de perfil
+     * POST /api/profile/photo
+     */
+    public function updateProfilePhoto(Request $request)
+    {
+        try {
+            $user = $request->user();
+
+            // Validación
+            $request->validate([
+                'profile_photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+            ]);
+
+            // Eliminar foto anterior si existe
+            $user->deleteOldProfilePhoto();
+
+            // Subir nueva foto
+            $path = $request->file('profile_photo')->store('profile_photos', 'public');
+            $user->update(['profile_photo' => $path]);
+
+            return response()->json([
+                'message' => 'Foto de perfil actualizada exitosamente',
+                'profile_photo_url' => $user->profile_photo_url
+            ], 200);
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'Error de validación',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error interno del servidor',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Eliminar foto de perfil
+     * DELETE /api/profile/photo
+     */
+    public function deleteProfilePhoto(Request $request)
+    {
+        try {
+            $user = $request->user();
+
+            // Eliminar foto si existe
+            $user->deleteOldProfilePhoto();
+            $user->update(['profile_photo' => null]);
+
+            return response()->json([
+                'message' => 'Foto de perfil eliminada exitosamente'
+            ], 200);
+
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error interno del servidor',

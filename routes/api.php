@@ -22,7 +22,6 @@ Route::get('/users/{id}/liked-by-others', [LikeController::class, 'getUserLikedB
 
 // Productos (público)
 Route::get('/products', [ProductController::class, 'index']);
-Route::get('/products/{id}', [ProductController::class, 'show']);
 Route::get('/users/{userId}/products', [ProductController::class, 'getUserProducts']);
 
 
@@ -59,6 +58,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/my-products', [ProductController::class, 'getMyProducts']); // Mis productos
     Route::put('/products/{id}', [ProductController::class, 'update']);  // Actualizar producto
     Route::patch('/products/{id}', [ProductController::class, 'update']); // Actualizar producto
+    Route::get('/products/{id}', [ProductController::class, 'show']);
 
     // 🔥 Chat
     Route::post('/chats/start', [ChatController::class, 'startChat']);

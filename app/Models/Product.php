@@ -22,6 +22,8 @@ class Product extends Model
         'publication_date' => 'date',
     ];
 
+    protected $appends = ['total_likes', 'is_liked_by_user'];
+
     // Relación: Un producto pertenece a un usuario
     public function user()
     {
@@ -76,4 +78,10 @@ class Product extends Model
         $firstImage = $this->images()->first();
         return $firstImage ? $firstImage->image_url : null;
     }
+
+
+    public function getIsLikedByUserAttribute(){
+    $user = auth()->user();
+    return $user ? $this->isLikedBy($user->id) : false;
+}
 }

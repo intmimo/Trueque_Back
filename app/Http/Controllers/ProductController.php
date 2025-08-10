@@ -125,26 +125,41 @@ class ProductController extends Controller
      * Mostrar un producto específico
      * GET /api/products/{id}
      */
-    public function show($id)
-    {
-        $product = Product::with([
-            'user:id,name,email,rating,colonia,municipio',
-            'images' => function($query) {
-                $query->orderBy('order');
-            }
-        ])->find($id);
-
-        if (!$product) {
-            return response()->json([
-                'message' => 'Producto no encontrado',
-            ], 404);
+public function show(Request $request, $id)
+{
+    $product = Product::with([
+        'user:id,name,email,rating,colonia,municipio',
+        'images' => function($query) {
+            $query->orderBy('order');
         }
+    ])->find($id);
 
+    if (!$product) {
         return response()->json([
-            'message' => 'Detalles del producto',
-            'data' => $product,
-        ]);
+            'message' => 'Producto no encontrado',
+        ], 404);
     }
+
+    $user = $request->user();
+
+    $isLiked = false;
+    if ($user) {
+        $isLiked = \App\Models\Like::hasLiked($user->id, $product->id);
+    }
+
+    // Contar likes totales
+    $totalLikes = \App\Models\Like::where('product_id', $product->id)->count();
+
+    return response()->json([
+        'message' => 'Detalles del producto',
+        'data' => [
+            'product' => $product,
+            'is_liked_by_user' => $isLiked,
+            'total_likes' => $totalLikes,
+        ]
+    ]);
+}
+
 
     /**
      * Eliminar un producto y sus imágenes
@@ -224,14 +239,16 @@ class ProductController extends Controller
     public function getMyProducts(Request $request)
     {
         $products = Product::with([
-            'user:id,name,email,rating,colonia,municipio',
-            'images' => function($query) {
-                $query->orderBy('order');
-            }
+    'user:id,name,email,rating,colonia,municipio',
+    'images' => function($query) {
+        $query->orderBy('order');
+    }
         ])
+        ->withCount('likes')   // <-- Esto agrega "likes_count" con el total de likes
         ->where('user_id', $request->user()->id)
         ->orderBy('created_at', 'desc')
         ->get();
+
 
         return response()->json([
             'message' => 'Mis productos',

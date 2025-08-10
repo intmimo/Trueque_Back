@@ -14,21 +14,30 @@ class ProductController extends Controller
      * Obtener todos los productos disponibles
      * GET /api/products
      */
-    public function index()
-    {
-        $products = Product::where('status', 'disponible')
-            ->with([
-                'user:id,name,email,rating,colonia,municipio',
-                'images' => function($query) {
-                    $query->orderBy('order');
-                }
-            ])->get();
-        
-        return response()->json([
-            'message' => 'Lista de productos disponibles',
-            'data' => $products,
+    public function index(Request $request)
+{
+    $excludeUserId = $request->query('exclude_user');
+
+    $query = Product::where('status', 'disponible')
+        ->with([
+            'user:id,name,email,rating,colonia,municipio',
+            'images' => function($query) {
+                $query->orderBy('order');
+            }
         ]);
+
+    if ($excludeUserId) {
+        $query->where('user_id', '!=', $excludeUserId);
     }
+
+    $products = $query->get();
+
+    return response()->json([
+        'message' => 'Lista de productos disponibles',
+        'data' => $products,
+    ]);
+}
+
 
     public function create()
     {
@@ -82,7 +91,7 @@ class ProductController extends Controller
 
         } catch (\Exception $e) {
             DB::rollback();
-            
+
             return response()->json([
                 'message' => 'Error al crear el producto',
                 'error' => $e->getMessage(),
@@ -98,10 +107,10 @@ class ProductController extends Controller
         foreach ($images as $index => $image) {
             // Generar nombre único para el archivo
             $fileName = time() . '_' . $index . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
-            
+
             // Guardar la imagen en storage/app/public/products
             $path = $image->storeAs('products', $fileName, 'public');
-            
+
             // Crear registro en la base de datos
             ProductImage::create([
                 'product_id' => $product->id,
@@ -178,7 +187,7 @@ class ProductController extends Controller
 
         } catch (\Exception $e) {
             DB::rollback();
-            
+
             return response()->json([
                 'message' => 'Error al eliminar el producto',
                 'error' => $e->getMessage(),
@@ -229,7 +238,7 @@ class ProductController extends Controller
             'data' => $products,
         ]);
     }
-    
+
     /**
      * Actualizar un producto existente
      * PUT/PATCH /api/products/{id}
@@ -274,7 +283,7 @@ class ProductController extends Controller
             // Eliminar imágenes específicas si se solicita
             if ($request->has('remove_images')) {
                 $imagesToRemove = $product->images()->whereIn('id', $request->remove_images)->get();
-                
+
                 foreach ($imagesToRemove as $image) {
                     Storage::disk('public')->delete($image->image_path);
                     $image->delete();
@@ -285,11 +294,11 @@ class ProductController extends Controller
             if ($request->hasFile('images')) {
                 // Obtener el orden más alto actual para continuar la secuencia
                 $maxOrder = $product->images()->max('order') ?? -1;
-                
+
                 foreach ($request->file('images') as $index => $image) {
                     $fileName = time() . '_' . ($maxOrder + $index + 1) . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
                     $path = $image->storeAs('products', $fileName, 'public');
-                    
+
                     ProductImage::create([
                         'product_id' => $product->id,
                         'image_path' => $path,
@@ -316,7 +325,7 @@ class ProductController extends Controller
 
         } catch (\Exception $e) {
             DB::rollback();
-            
+
             return response()->json([
                 'message' => 'Error al actualizar el producto',
                 'error' => $e->getMessage(),

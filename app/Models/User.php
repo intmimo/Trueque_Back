@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable
 {
@@ -21,6 +22,7 @@ class User extends Authenticatable
         'colonia',
         'municipio',
         'rating',
+        'profile_photo',
     ];
 
     /**
@@ -90,5 +92,28 @@ class User extends Authenticatable
     public function getFullLocationAttribute()
     {
         return $this->colonia . ', ' . $this->municipio;
+    }
+
+    /**
+     * Obtener URL completa de la foto de perfil
+     */
+    public function getProfilePhotoUrlAttribute()
+    {
+        if ($this->profile_photo) {
+            return Storage::url($this->profile_photo);
+        }
+        
+        // Retorna una imagen por defecto o null
+        return asset('images/default-avatar.png'); // o return null;
+    }
+
+    /**
+     * Eliminar foto de perfil anterior
+     */
+    public function deleteOldProfilePhoto()
+    {
+        if ($this->profile_photo && Storage::exists($this->profile_photo)) {
+            Storage::delete($this->profile_photo);
+        }
     }
 }

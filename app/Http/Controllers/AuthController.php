@@ -223,4 +223,24 @@ class AuthController extends Controller
             ], 500);
         }
     }
+
+    public function showUserProfile($id)
+{
+    try {
+        $user = User::with('products')->findOrFail($id);
+
+        return response()->json([
+            'message' => 'Usuario encontrado',
+            'user' => $user,
+            'products' => $user->products,
+        ], 200);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Usuario no encontrado',
+            'error' => $e->getMessage()
+        ], 404);
+    }
+}
+
 }

@@ -91,4 +91,34 @@ class User extends Authenticatable
     {
         return $this->colonia . ', ' . $this->municipio;
     }
+
+    /**
+ * Mostrar perfil público de usuario por id
+ * GET /api/users/{id}
+ */
+public function showUserProfile($id)
+{
+    try {
+        $user = User::findOrFail($id);
+
+        return response()->json([
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'colonia' => $user->colonia,
+            'municipio' => $user->municipio,
+            'rating' => $user->rating,
+            'full_location' => $user->full_location, // atributo accesor
+            'days_in_app' => $user->days_in_app,     // atributo accesor
+            'created_at' => $user->created_at,
+            'updated_at' => $user->updated_at,
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Usuario no encontrado',
+            'error' => $e->getMessage()
+        ], 404);
+    }
+}
+
 }

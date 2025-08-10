@@ -64,4 +64,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/chats', [ChatController::class, 'listChats']);
     Route::get('/chats/{id}/messages', [ChatController::class, 'getMessages']);
     Route::get('/chats/with/{userId}', [ChatController::class, 'getChatWith']);
+
+    // ✅ Palomitas (marcar mensajes como leídos)
+    Route::post('/chats/{id}/read', [ChatController::class, 'markAsRead']);
+
+    // 🗑️ Eliminar mensaje (solo autor)
+    Route::delete('/messages/{id}', [ChatController::class, 'destroyMessage']);
+    // 🗑️ Eliminar chat completo (solo participantes)
+Route::delete('/chats/{id}', [ChatController::class, 'destroyChat']);
 });

@@ -31,13 +31,16 @@ class RatingController extends Controller
         return response()->json(['message' => 'Calificación guardada', 'rating' => $rating]);
     }
 
-    public function getAverageRating($userId)
-    {
-        $average = Rating::where('to_user_id', $userId)->avg('stars');
+    public function getAverageRating($toUserId){
+    $average = Rating::where('to_user_id', $toUserId)->avg('stars');
+    $count = Rating::where('to_user_id', $toUserId)->count();
 
-        return response()->json([
-            'user_id' => $userId,
-            'average_rating' => round($average, 2)
-        ]);
-    }
+    return response()->json([
+        'user_id' => $toUserId,
+        'average_rating' => round($average, 2),
+        'rating_count' => $count
+    ]);
+}
+
+
 }

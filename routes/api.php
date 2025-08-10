@@ -9,6 +9,8 @@ use App\Http\Controllers\LikeController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\Api\ChatController; // 👈 Importación necesaria
 
+    Route::get('/users/{id}', [AuthController::class, 'showUserProfile']);
+
 // Rutas de Broadcast para canales privados
 Broadcast::routes(['middleware' => ['auth:sanctum']]);
 
@@ -23,6 +25,7 @@ Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{id}', [ProductController::class, 'show']);
 Route::get('/users/{userId}/products', [ProductController::class, 'getUserProducts']);
 
+
 // Rutas protegidas
 Route::middleware('auth:sanctum')->group(function () {
 
@@ -30,16 +33,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [AuthController::class, 'profile']);
     Route::put('/profile/update', [AuthController::class, 'updateProfile']);
 
+
     // Logout
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    // Rating
-    Route::post('/rate/{userId}', [RatingController::class, 'rateUser']);
-    Route::get('/rating/{userId}', [RatingController::class, 'getAverageRating']);
 
     // Likes
     Route::post('/products/{id}/like', [LikeController::class, 'likeProduct']);
     Route::delete('/products/{id}/unlike', [LikeController::class, 'unlikeProduct']);
+
+        // Rating
+    Route::post('/rate/{toUserId}', [RatingController::class, 'rateUser']);
+    Route::get('/rating/{toUserId}', [RatingController::class, 'getAverageRating']);
 
     // Usuario autenticado (test)
     Route::get('/user', function (Request $request) {

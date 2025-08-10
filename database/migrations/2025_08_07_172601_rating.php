@@ -12,12 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('ratings', function (Blueprint $table) {
-        $table->id();
-        $table->foreignId('from_user_id')->constrained('users')->onDelete('cascade');
-        $table->foreignId('to_user_id')->constrained('users')->onDelete('cascade');
-        $table->tinyInteger('stars'); // de 1 a 5
-        $table->timestamps();
-    });
+            $table->id();
+            $table->foreignId('from_user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('to_user_id')->constrained('users')->onDelete('cascade');
+            $table->tinyInteger('stars'); // de 1 a 5
+            $table->timestamps();
+
+            $table->unique(['from_user_id', 'to_user_id']);
+        });
     }
 
     /**
@@ -25,6 +27,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
+        Schema::dropIfExists('ratings');
     }
 };
+

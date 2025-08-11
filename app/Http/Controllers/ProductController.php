@@ -53,7 +53,7 @@ class ProductController extends Controller
         // Validación
         $request->validate([
             'name' => 'required|string|min:3|max:50',
-            'description' => 'required|string|min:10|max:255',
+            'description' => 'required|string|min:3|max:255',
             'location' => 'required|string|max:100',
             'status' => 'required|in:disponible,intercambiado',
             'wanted_item' => 'required|string|max:255',

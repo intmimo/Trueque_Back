@@ -350,4 +350,22 @@ public function show(Request $request, $id)
         }
     }
 
+    // En ProductController.php o un controlador dedicado
+
+public function getProductsLikedByUser($userId){
+    $products = Product::whereHas('likes', function ($query) use ($userId) {
+        $query->where('user_id', $userId);
+    })
+    ->with(['user:id,name,email,colonia,municipio', 'images' => function ($query) {
+        $query->orderBy('order');
+    }])
+    ->get();
+
+    return response()->json([
+        'message' => 'Productos liked por el usuario',
+        'data' => $products,
+    ]);
+}
+
+
 }

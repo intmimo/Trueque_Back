@@ -42,10 +42,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Likes
     Route::post('/products/{id}/like', [LikeController::class, 'likeProduct']);
     Route::delete('/products/{id}/unlike', [LikeController::class, 'unlikeProduct']);
+        Route::get('/user/{userId}/liked-products', [ProductController::class, 'getProductsLikedByUser']);
 
         // Rating
     Route::post('/rate/{toUserId}', [RatingController::class, 'rateUser']);
     Route::get('/rating/{toUserId}', [RatingController::class, 'getAverageRating']);
+    Route::get('/rating/history/{toUserId}', [RatingController::class, 'getRatingHistory']);
 
     // Usuario autenticado (test)
     Route::get('/user', function (Request $request) {

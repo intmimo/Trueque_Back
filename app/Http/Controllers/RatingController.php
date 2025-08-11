@@ -42,5 +42,16 @@ class RatingController extends Controller
     ]);
 }
 
+public function getRatingHistory($toUserId)
+{
+    $ratings = Rating::where('to_user_id', $toUserId)
+        ->with('fromUser:id,name') // trae info básica del usuario que calificó
+        ->orderBy('created_at', 'desc')
+        ->get();
 
+    return response()->json([
+        'user_id' => $toUserId,
+        'ratings' => $ratings
+    ]);
+}
 }

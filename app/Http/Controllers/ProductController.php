@@ -349,4 +349,5 @@ public function show(Request $request, $id)
             ], 500);
         }
     }
+
 }
